@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sureshot Signal Checker</title>
+    <title>Sureshot Signal Checker (Fast Mode)</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -23,13 +23,53 @@
         margin-top: 15px;
         font-weight: bold;
       }
-      input,
-      select,
-      button {
+      input[type="number"] {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
       }
+      .btn-group {
+        margin-top: 5px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px;
+        font-weight: bold;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      button[type="submit"] {
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        margin-top: 15px;
+      }
+      button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+
+      .green-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      .red-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+      .size-btn {
+        background-color: #6c757d;
+        color: white;
+      }
+
+      .selected {
+        outline: 3px solid #000;
+        filter: brightness(0.85);
+      }
+
       .result {
         margin-top: 20px;
         padding: 15px;
@@ -37,51 +77,103 @@
         background: #eef;
         font-weight: bold;
       }
-      button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-      button.clicked {
-        background-color: #28a745;
-      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h2>Sureshot Signal Checker</h2>
-      <label for="c1color">Candle 1 Color:</label>
-      <select id="c1color">
-        <option value="green">Green</option>
-        <option value="red">Red</option>
-      </select>
+      <h2>Sureshot Signal Checker (Fast Mode)</h2>
+      <form onsubmit="getSignal(); return false;">
+        <label>Candle 1 Color:</label>
+        <div class="btn-group" id="c1-group">
+          <button
+            type="button"
+            class="green-btn"
+            onclick="setColor('c1', 'green', this)"
+          >
+            🟩 Green
+          </button>
+          <button
+            type="button"
+            class="red-btn"
+            onclick="setColor('c1', 'red', this)"
+          >
+            🟥 Red
+          </button>
+        </div>
 
-      <label for="c2color">Candle 2 Color:</label>
-      <select id="c2color">
-        <option value="green">Green</option>
-        <option value="red">Red</option>
-      </select>
+        <label>Candle 2 Color:</label>
+        <div class="btn-group" id="c2-group">
+          <button
+            type="button"
+            class="green-btn"
+            onclick="setColor('c2', 'green', this)"
+          >
+            🟩 Green
+          </button>
+          <button
+            type="button"
+            class="red-btn"
+            onclick="setColor('c2', 'red', this)"
+          >
+            🟥 Red
+          </button>
+        </div>
 
-      <label for="c1strength">C1 Strength:</label>
-      <input type="number" id="c1strength" />
+        <label for="c1strength">C1 Strength:</label>
+        <input type="number" id="c1strength" required />
 
-      <label for="c2strength">C2 Strength:</label>
-      <input type="number" id="c2strength" />
+        <label for="c2strength">C2 Strength:</label>
+        <input type="number" id="c2strength" required />
 
-      <label for="size">Size of Candle:</label>
-      <select id="size">
-        <option value="c2>c1">C2 is bigger than C1</option>
-        <option value="c2<c1">C2 is smaller than C1</option>
-      </select>
+        <label>Size of Candle:</label>
+        <div class="btn-group" id="size-group">
+          <button
+            type="button"
+            class="size-btn"
+            onclick="setSize('c2>c1', this)"
+          >
+            C2 > C1
+          </button>
+          <button
+            type="button"
+            class="size-btn"
+            onclick="setSize('c2<c1', this)"
+          >
+            C2 < C1
+          </button>
+        </div>
 
-      <button id="checkBtn" onclick="getSignal()">Check Signal</button>
+        <button type="submit">🚀 Check Signal (Enter)</button>
+      </form>
+
       <div id="output" class="result"></div>
     </div>
 
     <script>
+      const inputData = {
+        c1: null,
+        c2: null,
+        size: null,
+      };
+
+      function setColor(candle, color, el) {
+        inputData[candle] = color;
+        const group = document.getElementById(`${candle}-group`);
+        Array.from(group.children).forEach((btn) =>
+          btn.classList.remove("selected")
+        );
+        el.classList.add("selected");
+      }
+
+      function setSize(size, el) {
+        inputData.size = size;
+        const group = document.getElementById("size-group");
+        Array.from(group.children).forEach((btn) =>
+          btn.classList.remove("selected")
+        );
+        el.classList.add("selected");
+      }
+
       const patterns = [
         {
           name: "1.1 – Bullish Continue",
@@ -185,26 +277,43 @@
       ];
 
       function getSignal() {
-        const button = document.getElementById("checkBtn");
-        button.classList.add("clicked");
-        setTimeout(() => button.classList.remove("clicked"), 300);
+        const c1StrengthInput = document.getElementById("c1strength");
+        const c2StrengthInput = document.getElementById("c2strength");
+
+        const c1Strength = Number(c1StrengthInput.value);
+        const c2Strength = Number(c2StrengthInput.value);
 
         const data = {
-          c1: document.getElementById("c1color").value,
-          c2: document.getElementById("c2color").value,
-          c1Strength: Number(document.getElementById("c1strength").value),
-          c2Strength: Number(document.getElementById("c2strength").value),
-          size: document.getElementById("size").value,
+          c1: inputData.c1,
+          c2: inputData.c2,
+          c1Strength,
+          c2Strength,
+          size: inputData.size,
         };
 
         const match = patterns.find((p) => p.match(data));
-
         const output = document.getElementById("output");
+
         if (match) {
           output.innerHTML = `Matched Pattern: <strong>${match.name}</strong><br>Signal: <strong>${match.signal}</strong>`;
         } else {
           output.innerHTML = "Not found pattern";
         }
+
+        // Shift C2 -> C1, clear C2
+        c1StrengthInput.value = c2Strength;
+        c2StrengthInput.value = "";
+        c2StrengthInput.focus();
+
+        // Reset color and size selections
+        inputData.c1 = null;
+        inputData.c2 = null;
+        inputData.size = null;
+
+        // Remove 'selected' styling from buttons
+        document.querySelectorAll(".btn-group button").forEach((btn) => {
+          btn.classList.remove("selected");
+        });
       }
     </script>
   </body>
