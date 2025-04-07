@@ -71,8 +71,8 @@
       }
 
       .result {
-        margin-top: 20px;
-        padding: 15px;
+        margin-top: 10px;
+        padding: 12px;
         border-radius: 6px;
         background: #eef;
         font-weight: bold;
@@ -143,11 +143,17 @@
           </button>
         </div>
 
+        <div id="output" class="result"></div>
+
         <button type="submit">🚀 Check Signal (Enter)</button>
       </form>
-
-      <div id="output" class="result"></div>
     </div>
+
+    <audio
+      id="successSound"
+      src="https://www.soundjay.com/buttons/sounds/button-3.mp3"
+      preload="auto"
+    ></audio>
 
     <script>
       const inputData = {
@@ -293,9 +299,11 @@
 
         const match = patterns.find((p) => p.match(data));
         const output = document.getElementById("output");
+        const sound = document.getElementById("successSound");
 
         if (match) {
           output.innerHTML = `Matched Pattern: <strong>${match.name}</strong><br>Signal: <strong>${match.signal}</strong>`;
+          sound.play();
         } else {
           output.innerHTML = "Not found pattern";
         }
@@ -315,6 +323,16 @@
           btn.classList.remove("selected");
         });
       }
+
+      document.addEventListener("keydown", function (e) {
+        if (
+          e.key === "Enter" &&
+          document.activeElement.tagName !== "TEXTAREA"
+        ) {
+          e.preventDefault();
+          getSignal();
+        }
+      });
     </script>
   </body>
 </html>
